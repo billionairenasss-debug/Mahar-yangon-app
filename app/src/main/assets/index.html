@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="my">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>မဟာရန်ကုန် Classic Store</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+</head>
+<body>
+<header><a class="brand" href="#home"><img src="assets/logo.jpeg" alt="မဟာရန်ကုန် Classic Store"></a>
+<button class="menu" onclick="document.querySelector('nav').classList.toggle('open')">☰</button>
+<nav><a href="#home">HOME</a><a href="#shop">SHOP</a><a href="#about">ABOUT</a><a href="#contact">CONTACT</a></nav>
+<a class="bag" href="#shop">SHOP NOW</a></header>
+
+<section id="home" class="hero"><div><p class="eyebrow">CLASSIC MEN'S FASHION · SINCE 2020</p>
+<h1>Life is Confidence<br><span>with မဟာရန်ကုန်</span></h1>
+<p>Classic. Clean. Confident.<br>အမျိုးသားတို့အတွက် သပ်ရပ်ပြီး အဆင့်မြင့်တဲ့ Style ကို ရွေးချယ်ပါ။</p>
+<a class="btn" href="#shop">SHOP COLLECTION →</a></div></section>
+
+<section class="trust"><div><b>PREMIUM QUALITY</b><small>ရွေးချယ်ထားတဲ့ အရည်အသွေး</small></div>
+<div><b>CLASSIC STYLE</b><small>အချိန်မရွေး ဝတ်လို့ကောင်း</small></div><div><b>SINCE 2020</b><small>ယုံကြည်စိတ်ချစွာ ဝယ်ယူနိုင်</small></div>
+<div><b>DELIVERY</b><small>မြန်မာနိုင်ငံအနှံ့</small></div></section>
+
+<section id="shop" class="shop"><div class="heading"><div><p class="eyebrow">THE COLLECTION</p><h2>Featured Products</h2></div><p>Product ကိုရွေးပြီး Messenger မှာ Order တင်နိုင်ပါတယ်</p></div>
+<div id="products" class="products"><div class="loading">Loading collection…</div></div></section>
+
+<section id="about" class="about"><img src="assets/logo.jpeg" alt="Official logo"><div><p class="eyebrow">OUR STORY</p><h2>Classic is more than a style.</h2>
+<p>Since 2020, မဟာရန်ကုန် Classic Store သည် အမျိုးသားများအတွက် ရိုးရှင်းသပ်ရပ်ပြီး ယုံကြည်မှုရှိစေမယ့် Classic & Smart Casual Fashion ကို ရွေးချယ်ပေးနေပါတယ်။</p>
+<p class="gold">Life is Confidence with မဟာရန်ကုန်</p></div></section>
+
+<section id="contact" class="contact"><div><p class="eyebrow">CONTACT</p><h2>Let's make your next look count.</h2></div>
+<div class="contactbox"><a href="tel:095066548">09-50 66 548</a><a href="https://m.me/mahar.yangon.classic.store" target="_blank">MESSAGE US →</a></div></section>
+<footer><img src="assets/logo.jpeg"><p>မဟာရန်ကုန် Classic Store · Classic Men's Fashion · Since 2020</p></footer>
+
+<script>
+const cfg=window.MAHAR_CONFIG;
+const client=supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_PUBLISHABLE_KEY);
+async function loadProducts(){
+  const {data,error}=await client.from('products').select('*').eq('active',true).order('created_at',{ascending:false});
+  const box=document.getElementById('products');
+  if(error){box.innerHTML='<p class="loading">Website database ကို မချိတ်ရသေးပါ။</p>';return;}
+  if(!data.length){box.innerHTML='<p class="loading">Collection အသစ်များ မကြာမီလာပါမယ်။</p>';return;}
+  box.innerHTML=data.map(p=>`<article class="product"><img src="${escapeHtml(p.image_url)}" alt="${escapeHtml(p.name)}">
+  <div class="product-info"><span>${escapeHtml(p.color||'COLLECTION')}</span><h3>${escapeHtml(p.name)}</h3>
+  <p>${p.price?`MMK ${Number(p.price).toLocaleString()}`:'Price — Message Us'}</p><small>Size: ${escapeHtml(p.sizes||'Contact Us')}</small>
+  <a class="order" href="https://m.me/mahar.yangon.classic.store" target="_blank">ORDER NOW →</a></div></article>`).join('');
+}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+loadProducts();
+</script></body></html>
