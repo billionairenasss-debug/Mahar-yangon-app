@@ -89,9 +89,9 @@ async function addProduct(){
   if(fileInput.files.length > 0){
     const file = fileInput.files[0];
     const path = `uploads/${Date.now()}_${file.name}`;
-    const { error: upErr } = await sb.storage.from('products').upload(path, file);
+    const { error: upErr } = await sb.storage.from('product-images').upload(path, file);
     if(!upErr){
-      const { data } = sb.storage.from('products').getPublicUrl(path);
+      const { data } = sb.storage.from('product-images').getPublicUrl(path);
       imageUrl = data.publicUrl;
     }
   }
