@@ -1,54 +1,134 @@
 <!doctype html>
 <html lang="my">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>မဟာရန်ကုန် · Admin</title><link rel="stylesheet" href="style.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script>
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>မဟာရန်ကုန် Admin Panel</title>
+<script src="supabase.js"></script>
+<script src="config.js"></script>
+<style>
+  body{font-family:sans-serif;margin:0;padding:15px;background:#f4f6f9;color:#333}
+  .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+  .back-btn{text-decoration:none;background:#333;color:#fff;padding:6px 12px;border-radius:4px;font-size:12px}
+  .tabs{display:flex;gap:10px;margin-bottom:15px}
+  .tab-btn{flex:1;padding:10px;background:#ddd;border:none;border-radius:6px;font-weight:bold;cursor:pointer}
+  .tab-btn.active{background:#111;color:#fff}
+  .card{background:#fff;padding:15px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.05);margin-bottom:15px}
+  input,textarea,button{width:100%;padding:10px;margin:6px 0;box-sizing:border-box;border-radius:5px;border:1px solid #ccc;font-size:14px}
+  button.submit{background:#c59b27;color:#fff;font-weight:bold;border:none;cursor:pointer}
+  table{width:100%;border-collapse:collapse;margin-top:10px}
+  th,td{padding:8px;border:1px solid #ddd;font-size:13px;text-align:left}
+  th{background:#f8f9fa}
+  .badge{padding:3px 6px;border-radius:4px;font-size:11px;background:#e9ecef}
+</style>
 </head>
-<body class="admin"><header><a href="index.html"><img src="assets/logo.jpeg" class="logo"></a><strong>MAHAR YANGON · ADMIN</strong>
-<a href="index.html" class="back">VIEW SHOP →</a></header>
-<main class="admin-main">
-<section id="loginPanel" class="panel login"><p class="eyebrow">SECURE ADMIN</p><h1>Store Manager</h1><p class="help">Admin email နဲ့ password သုံးပြီး ဝင်ပါ။</p>
-<form id="loginForm"><label>Email<input id="email" type="email" required></label><label>Password<input id="password" type="password" required></label><button class="btn" type="submit">LOGIN →</button><p id="loginMsg" class="msg"></p></form></section>
+<body>
 
-<section id="app" class="hidden">
-<div id="claimPanel" class="panel hidden"><p class="eyebrow">ONE-TIME SETUP</p><h2>Claim Store Admin</h2><p class="help">ဒီ account ကို Mahar Yangon Store ရဲ့ Admin အဖြစ် တစ်ကြိမ်သာ သတ်မှတ်နိုင်ပါတယ်။</p><button class="btn" onclick="claimAdmin()">CLAIM ADMIN →</button><p id="claimMsg" class="msg"></p></div>
-<div class="topbar"><div><p class="eyebrow">PRODUCT MANAGER</p><h1>Manage Collection</h1></div><button class="logout" onclick="logout()">LOG OUT</button></div>
-<section class="panel"><h2 id="formTitle">Add Product</h2>
-<form id="productForm"><input id="editId" type="hidden">
-<label>Product Photo<input id="photo" type="file" accept="image/*"></label>
-<div class="two"><label>Product Name<input id="name" required placeholder="Classic Black Tee"></label><label>Price (MMK)<input id="price" type="number" min="0" placeholder="35000"></label></div>
-<div class="two"><label>Color<input id="color" placeholder="Black"></label><label>Sizes<input id="sizes" placeholder="S, M, L, XL, XXL"></label></div>
-<label><input id="active" type="checkbox" checked> Customer Website မှာ ပြမယ်</label>
-<div class="buttons"><button class="btn" type="submit">SAVE PRODUCT</button><button type="button" class="cancel" onclick="resetForm()">CANCEL</button></div>
-<p id="formMsg" class="msg"></p></form></section>
-<section class="panel"><div class="admin-head"><div><p class="eyebrow">CATALOG</p><h2>Products</h2></div><button class="refresh" onclick="loadAdminProducts()">REFRESH</button></div><div id="list">Loading…</div></section>
-</section></main>
+<div class="header">
+  <h2 style="margin:0;">မဟာရန်ကုန် Admin</h2>
+  <a href="index.html" class="back-btn">← ဆိုင်ရှေ့သို့</a>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('stock')">📦 ပစ္စည်းနှင့် Stock</button>
+  <button class="tab-btn" onclick="switchTab('customer')">👥 Customer စာရင်း</button>
+</div>
+
+<!-- Stock Tab -->
+<div id="tab-stock">
+  <div class="card">
+    <h3>အထည်အသစ်ထည့်ရန်</h3>
+    <input id="p_name" placeholder="ပစ္စည်းအမည် (ဥပမာ- Armani Polo)">
+    <input id="p_price" type="number" placeholder="ဈေးနှုန်း (Ks)">
+    <input id="p_stock" type="number" placeholder="လက်ကျန် Stock အရေအတွက်" value="10">
+    <input id="p_desc" placeholder="အသေးစိတ် (Color / Size: M, L, XL)">
+    <label style="font-size:12px;color:#666">ပစ္စည်းဓာတ်ပုံ ရွေးပါ:</label>
+    <input id="p_file" type="file" accept="image/*">
+    <button class="submit" onclick="addProduct()">ပစ္စည်း အသစ်တင်မည်</button>
+  </div>
+  <div class="card">
+    <h3>လက်ကျန် စာရင်းများ</h3>
+    <div id="productList">ခေတ္တစောင့်ပါ...</div>
+  </div>
+</div>
+
+<!-- Customer Tab -->
+<div id="tab-customer" style="display:none">
+  <div class="card">
+    <h3>Customer အော်ဒါမှတ်ရန်</h3>
+    <input id="c_name" placeholder="Customer အမည်">
+    <input id="c_phone" placeholder="ဖုန်းနံပါတ်">
+    <textarea id="c_addr" placeholder="ပို့ဆောင်ရမည့် လိပ်စာ / မြို့နယ်"></textarea>
+    <input id="c_item" placeholder="ဝယ်ယူသည့် ပစ္စည်းအမည်">
+    <input id="c_qty" type="number" placeholder="အရေအတွက်" value="1">
+    <input id="c_total" type="number" placeholder="ကျသင့်ငွေ စုစုပေါင်း (Ks)">
+    <button class="submit" style="background:#111" onclick="addCustomer()">Customer Data သိမ်းမည်</button>
+  </div>
+  <div class="card">
+    <h3>Customer စာရင်းနှင့် အော်ဒါများ</h3>
+    <div id="customerList">ခေတ္တစောင့်ပါ...</div>
+  </div>
+</div>
+
 <script>
-const cfg=window.MAHAR_CONFIG, sb=supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_PUBLISHABLE_KEY);
-let current=[];
-async function isAdmin(){const {data,error}=await sb.from('admin_users').select('user_id').limit(1);return !error && !!data?.length;}
-async function showApp(){document.getElementById('loginPanel').classList.add('hidden');document.getElementById('app').classList.remove('hidden');const admin=await isAdmin();if(!admin){document.getElementById('claimPanel').classList.remove('hidden');return;}loadAdminProducts();}
-async function claimAdmin(){const msg=document.getElementById('claimMsg');msg.textContent='Setting up admin…';const {data:{user}}=await sb.auth.getUser();if(!user){msg.textContent='Please login again.';return;}const {error}=await sb.from('admin_users').insert({user_id:user.id});if(error){msg.textContent=error.message;return;}msg.textContent='Admin ready ✓';document.getElementById('claimPanel').classList.add('hidden');loadAdminProducts();}
-async function check(){const {data}=await sb.auth.getSession();if(data.session)showApp();}
-document.getElementById('loginForm').onsubmit=async e=>{e.preventDefault();const m=document.getElementById('loginMsg');m.textContent='Logging in…';
-const {error}=await sb.auth.signInWithPassword({email:email.value,password:password.value});if(error)m.textContent=error.message;else showApp();}
-async function logout(){await sb.auth.signOut();location.reload()}
-async function loadAdminProducts(){const {data,error}=await sb.from('products').select('*').order('created_at',{ascending:false});if(error){list.innerHTML='<p class="msg">'+error.message+'</p>';return}current=data||[];
-list.innerHTML=current.map(p=>`<div class="row"><img src="${escapeHtml(p.image_url)}"><div><b>${escapeHtml(p.name)}</b><small>${p.price?'MMK '+Number(p.price).toLocaleString():'Price — Message Us'} · ${escapeHtml(p.color||'')} · ${escapeHtml(p.sizes||'')} · ${p.active?'LIVE':'HIDDEN'}</small></div><div class="rowbuttons"><button onclick="editProduct('${p.id}')">EDIT</button><button class="danger" onclick="deleteProduct('${p.id}')">DELETE</button></div></div>`).join('')||'<p class="help">Product မရှိသေးပါ။</p>'}
-function editProduct(id){const p=current.find(x=>x.id===id);if(!p)return;editId.value=p.id;name.value=p.name;price.value=p.price??'';color.value=p.color??'';sizes.value=p.sizes??'';active.checked=p.active;document.getElementById('formTitle').textContent='Edit Product';scrollTo({top:0,behavior:'smooth'})}
-function resetForm(){document.getElementById('productForm').reset();editId.value='';active.checked=true;document.getElementById('formTitle').textContent='Add Product';formMsg.textContent=''}
-async function upload(file){const ext=(file.name.split('.').pop()||'jpg').toLowerCase();const path=`${crypto.randomUUID()}.${ext}`;
-const {error}=await sb.storage.from('product-images').upload(path,file,{contentType:file.type,upsert:false});if(error)throw error;
-const {data}=sb.storage.from('product-images').getPublicUrl(path);return {url:data.publicUrl,path};}
-document.getElementById('productForm').onsubmit=async e=>{e.preventDefault();formMsg.textContent='Saving…';try{
-let image_url='',image_path='';const old=current.find(p=>p.id===editId.value);
-if(photo.files[0]){const up=await upload(photo.files[0]);image_url=up.url;image_path=up.path}else if(old){image_url=old.image_url;image_path=old.image_path||''}else{throw new Error('Product photo ထည့်ပေးပါ။')}
-const payload={name:name.value.trim(),price:price.value?Number(price.value):null,color:color.value.trim(),sizes:sizes.value.trim(),image_url,image_path,active:active.checked};
-let res;if(editId.value)res=await sb.from('products').update(payload).eq('id',editId.value);else res=await sb.from('products').insert(payload);
-if(res.error)throw res.error;resetForm();await loadAdminProducts();formMsg.textContent='Saved ✓';
-}catch(err){formMsg.textContent=err.message}}
-async function deleteProduct(id){if(!confirm('ဒီ Product ကိုဖျက်မလား?'))return;const p=current.find(x=>x.id===id);const {error}=await sb.from('products').delete().eq('id',id);if(error){alert(error.message);return}
-if(p?.image_path)await sb.storage.from('product-images').remove([p.image_path]);loadAdminProducts()}
-function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-check();
-</script></body></html>
+const sb = supabase.createClient(window.MAHAR_CONFIG.SUPABASE_URL, window.MAHAR_CONFIG.SUPABASE_PUBLISHABLE_KEY);
+
+function switchTab(t){
+  document.getElementById('tab-stock').style.display = t==='stock'?'block':'none';
+  document.getElementById('tab-customer').style.display = t==='customer'?'block':'none';
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active', (i===0 && t==='stock') || (i===1 && t==='customer')));
+  if(t==='stock') loadProducts(); else loadCustomers();
+}
+
+async function addProduct(){
+  const name=document.getElementById('p_name').value, price=document.getElementById('p_price').value;
+  const stock=document.getElementById('p_stock').value || 0, desc=document.getElementById('p_desc').value;
+  const fileInput=document.getElementById('p_file');
+  if(!name || !price) return alert("အမည်နှင့် ဈေးနှုန်း ဖြည့်ပါ");
+
+  let imageUrl = 'assets/logo.jpeg';
+  if(fileInput.files.length > 0){
+    const file = fileInput.files[0];
+    const path = `uploads/${Date.now()}_${file.name}`;
+    const { error: upErr } = await sb.storage.from('products').upload(path, file);
+    if(!upErr){
+      const { data } = sb.storage.from('products').getPublicUrl(path);
+      imageUrl = data.publicUrl;
+    }
+  }
+
+  const { error } = await sb.from('products').insert([{ name, price, stock, description: desc, image_url: imageUrl, active: true }]);
+  if(error) alert("Error: " + error.message);
+  else { alert("ပစ္စည်းထည့်သွင်းပြီးပါပြီ"); loadProducts(); }
+}
+
+async function loadProducts(){
+  const { data } = await sb.from('products').select('*').order('id', {ascending: false});
+  const el = document.getElementById('productList');
+  if(!data || data.length === 0){ el.innerHTML = 'ပစ္စည်းမရှိသေးပါ'; return; }
+  el.innerHTML = `<table><tr><th>ပုံ</th><th>အမည်</th><th>ဈေး</th><th>Stock</th></tr>` + 
+    data.map(p => `<tr><td><img src="${p.image_url||'assets/logo.jpeg'}" width="40" height="40" style="object-fit:cover;border-radius:4px;"></td><td>${p.name}</td><td>${Number(p.price).toLocaleString()} Ks</td><td><span class="badge">${p.stock||0} ထည်</span></td></tr>`).join('') + `</table>`;
+}
+
+async function addCustomer(){
+  const name=document.getElementById('c_name').value, phone=document.getElementById('c_phone').value;
+  const address=document.getElementById('c_addr').value, order_item=document.getElementById('c_item').value;
+  const quantity=document.getElementById('c_qty').value, total_price=document.getElementById('c_total').value;
+  if(!name || !phone) return alert("Customer အမည်နှင့် ဖုန်းနံပါတ် ဖြည့်ပါ");
+
+  const { error } = await sb.from('customers').insert([{ name, phone, address, order_item, quantity, total_price }]);
+  if(error) alert("Error: " + error.message);
+  else { alert("Customer မှတ်တမ်းတင်ပြီးပါပြီ"); loadCustomers(); }
+}
+
+async function loadCustomers(){
+  const { data } = await sb.from('customers').select('*').order('id', {ascending: false});
+  const el = document.getElementById('customerList');
+  if(!data || data.length === 0){ el.innerHTML = 'Customer စာရင်းမရှိသေးပါ'; return; }
+  el.innerHTML = `<table><tr><th>အမည်/လိပ်စာ</th><th>ဖုန်း</th><th>ပစ္စည်း</th><th>ကျသင့်ငွေ</th></tr>` + 
+    data.map(c => `<tr><td><b>${c.name}</b><br><small style="color:#666;">${c.address||''}</small></td><td>${c.phone}</td><td>${c.order_item} (${c.quantity})</td><td>${Number(c.total_price||0).toLocaleString()} Ks</td></tr>`).join('') + `</table>`;
+}
+
+loadProducts();
+</script>
+</body>
+</html>
