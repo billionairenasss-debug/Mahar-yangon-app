@@ -1,16 +1,16 @@
-name: Build Mahar Yangon APK
+name: Build Mahar Yangon APKs
 
 on:
   workflow_dispatch:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
-      actions: read
 
     steps:
       - name: Checkout
@@ -24,15 +24,24 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.7'
 
-      - name: Build debug APK
-        run: gradle --no-daemon assembleDebug
+      - name: Make Gradle executable
+        run: chmod +x gradlew
 
-      - name: Upload APK
+      - name: Build Customer APK
+        run: ./gradlew :app:assembleCustomerDebug
+
+      - name: Build Admin APK
+        run: ./gradlew :app:assembleAdminDebug
+
+      - name: Upload Customer APK
         uses: actions/upload-artifact@v4
         with:
-          name: mahar-yangon-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
+          name: Mahar-Yangon-Customer-APK
+          path: app/build/outputs/apk/customer/debug/app-customer-debug.apk
+
+      - name: Upload Admin APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mahar-Yangon-Admin-APK
+          path: app/build/outputs/apk/admin/debug/app-admin-debug.apk
