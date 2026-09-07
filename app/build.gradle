@@ -1,5 +1,31 @@
-plugins { id 'com.android.application' }
+plugins {
+    id 'com.android.application'
+}
 
-android { namespace 'com.mahar.yangon.app'; compileSdk 35
-    defaultConfig { applicationId 'com.mahar.yangon.app'; minSdk 23; targetSdk 35; versionCode 1; versionName '1.0.0' }
+android {
+    namespace 'com.mahar.yangon.app'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.mahar.yangon.app'
+        minSdk 23
+        targetSdk 35
+        versionCode 1
+        versionName '1.0'
+    }
+
+    flavorDimensions 'appType'
+
+    productFlavors {
+        customer {
+            dimension 'appType'
+            applicationId 'com.mahar.yangon.app'
+        }
+
+        admin {
+            dimension 'appType'
+            applicationId 'com.mahar.yangon.app.admin'
+            versionNameSuffix '-admin'
+        }
+    }
 }
