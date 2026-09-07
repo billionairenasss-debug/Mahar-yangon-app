@@ -38,10 +38,17 @@
 <script>
 const cfg=window.MAHAR_CONFIG;
 let client=null;try{client=supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_PUBLISHABLE_KEY)}catch(e){console.error("Supabase init error:",e)}
+function showFallbackProducts(){
+  const box=document.getElementById('products');
+  const data=window.MAHAR_PRODUCTS||[];
+  if(!data.length){box.innerHTML='<p class="loading">Collection အသစ်များ မကြာမီလာပါမယ်။</p>';return;}
+  box.innerHTML=data.map(p=>`<article class="product"><img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}"><div class="product-info"><span>${escapeHtml(p.color||"COLLECTION")}</span><h3>${escapeHtml(p.name)}</h3><p>MMK ${Number(p.price||0).toLocaleString()}</p><small>Size: ${escapeHtml(p.sizes||"Contact Us")}</small><a class="order" href="https://m.me/mahar.yangon.classic.store" target="_blank">ORDER NOW →</a></div></article>`).join("");
+}
 async function loadProducts(){
+  if(!client){showFallbackProducts();return;}
   const {data,error}=await client.from('products').select('*').eq('active',true).order('created_at',{ascending:false});
   const box=document.getElementById('products');
-  if(error){box.innerHTML='<p class="loading">Website database ကို မချိတ်ရသေးပါ။</p>';return;}
+  if(error){console.error("Products error:",error);showFallbackProducts();return;}
   if(!data.length){box.innerHTML='<p class="loading">Collection အသစ်များ မကြာမီလာပါမယ်။</p>';return;}
   box.innerHTML=data.map(p=>`<article class="product"><img src="${escapeHtml(p.image_url)}" alt="${escapeHtml(p.name)}">
   <div class="product-info"><span>${escapeHtml(p.color||'COLLECTION')}</span><h3>${escapeHtml(p.name)}</h3>
