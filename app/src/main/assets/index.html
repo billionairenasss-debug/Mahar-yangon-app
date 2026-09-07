@@ -37,7 +37,7 @@
 
 <script>
 const cfg=window.MAHAR_CONFIG;
-const client=supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_PUBLISHABLE_KEY);
+let client=null;try{client=supabase.createClient(cfg.SUPABASE_URL,cfg.SUPABASE_PUBLISHABLE_KEY)}catch(e){console.error("Supabase init error:",e)}
 async function loadProducts(){
   const {data,error}=await client.from('products').select('*').eq('active',true).order('created_at',{ascending:false});
   const box=document.getElementById('products');
